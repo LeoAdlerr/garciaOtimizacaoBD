@@ -1,0 +1,104 @@
+passos para a resolução do laboratório
+
+
+ seguir está o passo a passo para implementar a rotina com duas abordagens: a versão que utiliza sequence do Oracle e a versão que utiliza hot spot controlado via SELECT FOR UPDATE.
+
+Passo 1: Criar a tabela de exemplo
+Primeiro, crie uma tabela de exemplo que será usada em ambas as rotinas. Essa tabela armazenará os valores da chave primária (PK) gerados de forma sequencial, bem como uma coluna adicional de texto:
+
+CREATE TABLE tabela (
+  col1 NUMBER PRIMARY KEY,
+  col2 VARCHAR2(50)
+);
+
+Passo 2: Criar a sequence do Oracle
+Para a primeira abordagem, crie uma sequence que será usada para gerar os valores da chave primária (PK) automaticamente:
+
+
+CREATE SEQUENCE sequencia
+  INCREMENT BY 1
+  START WITH 1;
+
+Passo 3: Implementar a rotina com sequence do Oracle
+Abaixo está a implementação de uma procedure que utiliza a sequence do Oracle para gerar o valor da chave primária:
+
+CREATE OR REPLACE PROCEDURE nome_proc_com_seq IS
+BEGIN
+  FOR i IN 1..1000000 LOOP
+    INSERT INTO tabela (col1, col2)
+    VALUES (sequencia.NEXTVAL, 'texto'+sequencia.NEXTVAL);
+    COMMIT;
+  END LOOP;
+END;
+/
+
+Passo 4: Implementar a versão com hot spot (controle manual de sequencial)
+Agora crie a tabela de controle de sequencial para a abordagem de hot spot, onde o valor do ID é controlado manualmente:
+
+CREATE TABLE tab_controla_id 
+(
+  valor_id NUMBER
+);
+
+-- Insere o valor inicial na tabela de controle
+
+INSERT INTO tab_controla_id (valor_id) VALUES (1);
+COMMIT;
+
+Em seguida, crie a procedure que faz o controle manual do ID:
+
+CREATE OR REPLACE PROCEDURE nome_proc_com_hot_spot IS
+  variavel NUMBER;
+BEGIN
+  FOR i IN 1..1000000 LOOP
+    -- Lê o valor atual do sequencial
+    SELECT valor_id INTO variavel
+    FROM tab_controla_id
+    FOR UPDATE OF valor_id;
+    
+    -- Atualiza o sequencial para o próximo valor
+    UPDATE tab_controla_id
+    SET valor_id = valor_id + 1;
+    
+    -- Insere o valor na tabela final
+    INSERT INTO tabela (col1, col2)
+    VALUES (variavel, 'texto1');
+    
+    -- Commit para liberar o bloqueio
+    COMMIT;
+  END LOOP;
+END;
+/
+
+Passo 5: Executar ambas as procedures em sessões paralelas
+No SQL*Plus, você pode abrir várias sessões e executar as duas procedures ao mesmo tempo para testar o comportamento concorrente.
+
+Execução da versão com sequence:
+
+Abra duas ou mais janelas de SQL*Plus.
+Execute os comandos a seguir em todas as janelas para monitorar o tempo de execução:
+
+SET TIMING ON;
+EXEC nome_proc_com_seq;
+Execução da versão com hot spot:
+
+Novamente, abra duas ou mais janelas de SQL*Plus.
+Execute os comandos a seguir em todas as janelas para monitorar o tempo de execução:
+
+SET TIMING ON;
+EXEC nome_proc_com_hot_spot;
+Passo 6: Monitorar a execução com o Oracle Enterprise Manager (OEM)
+Para monitorar a diferença de transações e bloqueios durante a execução, você pode usar o Oracle Enterprise Manager (OEM). A partir do OEM, você poderá visualizar gráficos e relatórios de transações por segundo (TPS), além de monitorar os bloqueios que ocorrem devido à concorrência nas duas abordagens.
+
+Passos no OEM:
+
+Acesse o OEM:
+
+Acesse o OEM através do navegador e faça login no banco de dados que você está monitorando.
+Monitorar Atividade em Tempo Real:
+
+Vá para a seção "Performance" e observe os gráficos de atividade em tempo real.
+Você poderá comparar o número de transações por segundo e visualizar bloqueios durante a execução das duas procedures.
+Resultados Esperados
+Na versão com sequence, você deverá ver uma maior escalabilidade, já que a geração de PK não causa contenção entre as sessões.
+Na versão com hot spot, é provável que haja mais bloqueios devido ao uso de SELECT FOR UPDATE, o que pode resultar em contenção quando múltiplas sessões tentam atualizar o mesmo valor na tabela de controle.
