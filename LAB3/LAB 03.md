@@ -1,52 +1,81 @@
-Relatório de Laboratório – Lab 03: Refatoração de SQL com Hot Spot
-1. Experimentos Realizados
-1.1. Implementação com Controle Sequencial Manual (Hot Spot)
-Descrição: Foi implementada uma rotina em PL/SQL utilizando controle sequencial manual (Hot Spot) para gerar inserções em uma tabela.
+# Relatório de Laboratório – Lab 03: Refatoração de SQL com Hot Spot
+**Nome:** Leonardo Adler da Silva  
+**Tema:** Otimização de Banco de Dados
 
-Procedimento:
+---
 
-Criou-se a tabela tabela para armazenar os dados.
+## 1. Experimentos Realizados
 
-Criou-se uma tabela de controle tab_controla_id para gerenciar o sequencial.
+### 1.1. Implementação com Controle Sequencial Manual (Hot Spot)
 
-Implementou-se a rotina que, em um loop, faz uso de FOR UPDATE para obter e atualizar IDs, inserindo dados na tabela.
+**Descrição:**  
+Foi implementada uma rotina em PL/SQL que utiliza controle sequencial manual (Hot Spot) para realizar inserções em uma tabela.
 
-A rotina foi executada em múltiplas abas do SQL Developer para gerar concorrência.
-Resultados:
+**Procedimento:**
+1. Criou-se a tabela `tabela` para armazenar os dados inseridos.
+2. Criou-se uma tabela de controle `tab_controla_id` para gerenciar o sequencial de IDs.
+3. Implementou-se uma rotina que, em um loop, usa `FOR UPDATE` para obter e atualizar IDs, inserindo os dados na tabela de destino.
+4. A rotina foi executada em múltiplas abas do SQL Developer para simular um ambiente de concorrência.
 
-Tempo de Execução: Aproximadamente 7m 30s.
-I/O Requests: 1.927 requisições de I/O.
-Bytes de I/O: 490.9MB transferidos.
-Tempo total no banco: 10.7 segundos.
-Problemas Identificados:
+**Resultados (com_hot_spot):**
+- **Tempo Total de Execução:** 07m 31.285s
+- **Tempo no Banco de Dados:** 1.4h
+- **PL/SQL & Java:** 16.5s
+- **Atividade (%):** 100%
+- **I/O Requests:** 490 requisições de I/O
+- **Buffer Gets:** 12M
+- **I/O Bytes:** 302.7MB
 
-Sobrecarga no Banco de Dados: O uso de bloqueios gerou contenção e alta utilização de I/O.
-Gargalo de I/O: O alto número de sessões causou congestionamento, resultando em um tempo de execução prolongado.
-1.2. Implementação com Controle via Sequence do Oracle
-Descrição: Implementou-se uma rotina em PL/SQL que utiliza uma sequence para gerar inserções em uma tabela.
+**Problemas Identificados:**
+- **Sobrecarga no Banco de Dados:** O uso de bloqueios (lockings) gerou alta contenção, resultando em uso excessivo de I/O.
+- **Gargalo de I/O:** A execução simultânea em várias sessões gerou congestionamento no banco, impactando significativamente o tempo de execução.
 
-Procedimento:
+### 1.2. Implementação com Controle via Sequence do Oracle
 
-Criou-se uma sequence no Oracle para gerenciar IDs.
+**Descrição:**  
+Implementou-se uma rotina em PL/SQL utilizando uma `sequence` para gerenciar a geração de IDs de forma otimizada.
 
-A rotina foi executada em múltiplas abas do SQL Developer para gerar concorrência.
-Resultados:
+**Procedimento:**
+1. Criou-se uma `sequence` no Oracle para gerenciar a atribuição de IDs de forma independente para cada sessão.
+2. Implementou-se a rotina que utiliza `NEXTVAL` da `sequence` para gerar e inserir IDs na tabela, sem a necessidade de bloqueios.
+3. A rotina foi executada em múltiplas abas do SQL Developer para simular concorrência.
 
-Tempo de Execução: Aproximadamente 5m 30s.
-I/O Requests: Variou entre 41 e 164 requisições de I/O.
-Bytes de I/O: 20.9MB processados por execução.
-Tempo total no banco: 10.42m.
-Benefícios Identificados:
+**Resultados (com_seq):**
+- **Tempo Total de Execução:** 05m 36.632s
+- **Tempo no Banco de Dados:** 5.6m
+- **PL/SQL & Java:** 9.8s
+- **Atividade (%):** 100%
+- **Buffer Gets:** 6,263K
+- **I/O Requests:** 408 requisições de I/O
+- **I/O Bytes:** 252.3MB
 
-Menor Sobrecarga de I/O: O uso de sequences eliminou a necessidade de bloqueios, reduzindo significativamente o número de operações de I/O e o volume de dados processados.
-Melhor Concurrency: As múltiplas sessões operaram independentemente, sem comprometer o desempenho.
+**Benefícios Identificados:**
+- **Redução de Sobrecarga de I/O:** O uso de sequences eliminou a necessidade de bloqueios, resultando em um número reduzido de operações de I/O e menor volume de dados processados.
+- **Melhor Concorrência:** A utilização de sequences permitiu que as sessões operassem independentemente, sem afetar negativamente o desempenho.
 
-1.3. Comparação entre Hot Spot e Sequence
-Desempenho: O tempo de execução com sequences foi drasticamente menor (aproximadamente 5m 30s) comparado ao Hot Spot (7m 30s).
-Uso de I/O: As operações de I/O e o volume de dados processados foram significativamente menores com sequences.
-Concorrência: O uso de sequences eliminou a contenção de bloqueios presente no Hot Spot.
+### 1.3. Comparação entre Hot Spot e Sequence
 
-1.4. Recomendações
-Uso de Sequences: Recomenda-se o uso de sequences para geração de IDs em sistemas de banco de dados que exigem alta concorrência, devido à sua eficiência e escalabilidade.
-Conclusão
-A comparação entre as abordagens de controle sequencial manual (Hot Spot) e o uso de sequences demonstra claramente que a implementação de sequences oferece vantagens significativas em ambientes de alta concorrência. A escolha de uma abordagem adequada pode ter um impacto substancial no desempenho e na eficiência do sistema de banco de dado
+| Métrica             | Hot Spot (com_hot_spot) | Sequence (com_seq)  |
+|---------------------|-------------------------|----------------------|
+| Tempo de Execução   | 07m 31.285s             | 05m 36.632s         |
+| Tempo no Banco      | 1.4h                    | 5.6m                |
+| PL/SQL & Java       | 16.5s                   | 9.8s                |
+| Atividade (%)       | 100%                    | 100%                |
+| I/O Requests        | 490                     | 408                 |
+| Buffer Gets         | 12M                     | 6,263K              |
+| I/O Bytes           | 302.7MB                 | 252.3MB             |
+
+**Conclusões da Comparação:**
+- **Desempenho:** A implementação com sequences demonstrou um tempo de execução reduzido em comparação com o Hot Spot.
+- **Uso de I/O:** A sequência apresentou uma significativa economia de I/O e volume de dados, o que também contribuiu para a diminuição do tempo total de execução.
+- **Concorrência:** A eliminação de bloqueios pela implementação de sequences melhorou a capacidade de concorrência, reduzindo a contenção que ocorria no Hot Spot.
+
+### 1.4. Recomendações
+
+- **Uso de Sequences:** Com base nos experimentos, recomenda-se fortemente o uso de sequences para a geração de IDs em sistemas que exigem alta concorrência e eficiência no gerenciamento de I/O. A implementação com sequences oferece um ganho substancial de desempenho e escalabilidade em relação ao controle sequencial manual.
+
+---
+
+## Conclusão
+
+A comparação entre as abordagens de controle sequencial manual (Hot Spot) e o uso de sequences demonstra claramente que sequences são superiores para ambientes de alta concorrência. A escolha da abordagem de sequence impacta positivamente o desempenho e a eficiência do banco de dados, reduzindo a sobrecarga de I/O e eliminando contenções de bloqueio.
