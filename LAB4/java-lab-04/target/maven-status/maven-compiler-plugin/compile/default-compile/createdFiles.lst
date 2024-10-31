@@ -1,0 +1,4 @@
+com\greatpretender\api\projetoapijaia\Lab4OTBApplication.class
+com\greatpretender\api\projetoapijaia\repository\OracleQueryExecutor.class
+com\greatpretender\api\projetoapijaia\repository\DatabaseConnection.class
+com\greatpretender\api\projetoapijaia\controller\PerformanceTestController.class
