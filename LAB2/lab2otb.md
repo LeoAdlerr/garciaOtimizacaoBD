@@ -1,0 +1,1 @@
+conteudo do lab 2 particionamento
