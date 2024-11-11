@@ -18,19 +18,16 @@ Esses métodos permitem flexibilidade no gerenciamento de dados e eficiência na
 2. Criar uma Nova Tabela Não Particionada a partir de SH.COSTS
 Execute o comando abaixo para criar uma cópia não particionada da tabela SH.COSTS, denominada sh.costs_comum:
 
-sql
-Copy code
 CREATE TABLE sh.costs_comum AS
 SELECT * FROM sh.costs;
+
 3. Executar as Consultas do Lab 01 na Tabela sh.costs_comum com e sem PK
 Agora, vamos realizar as consultas do Lab 01 adaptadas para sh.costs_comum, documentando os resultados com e sem chave primária.
 
 a) Adicionar e Remover a Chave Primária (PK)
 Para adicionar uma chave primária na coluna CUST_ID:
-
-sql
-Copy code
 ALTER TABLE sh.costs_comum ADD PRIMARY KEY (cust_id);
+
 Para remover a chave primária:
 
 sql
