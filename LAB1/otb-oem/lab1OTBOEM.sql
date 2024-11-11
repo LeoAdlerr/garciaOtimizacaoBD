@@ -14,6 +14,12 @@ BEGIN
 END;
 /
 
+(1consultaOem.png)
+Resultados do OEM: 
+    TIME & WAIT STATISTICS => Duration == 36.0s, Database Time == 35.6s, PL/SQL & Java == 1.0s, Acitivity % == 100
+    I/O STATISTICS => Buffer Gets == 23M, I/O Requests == 10, I/O Bytes == 424KB
+
+
 SET TIMING ON;
 
 DECLARE
@@ -30,6 +36,11 @@ BEGIN
 END;
 /
 
+(2consultaOem.png)
+Resultados do OEM: 
+    TIME & WAIT STATISTICS =>Duration == 32.0s, Database Time == 28.4s, PL/SQL & Java == 2.6s, Acitivity % == 100
+    I/O STATISTICS => Buffer Gets == 3,420K, I/O Requests == 1, I/O Bytes == 8KB
+
 SET TIMING ON;
 
 DECLARE
@@ -45,6 +56,10 @@ BEGIN
     END LOOP;
 END;
 /
+(3consultaOem.png)
+Resultados do OEM: 
+    TIME & WAIT STATISTICS =>Duration == 2.7m, Database Time == 2.7m, PL/SQL & Java == 2.8s, Acitivity % == 100
+    I/O STATISTICS => Buffer Gets == 106M, I/O Requests == 118, I/O Bytes == 2MB
 
 SET TIMING ON;
 
@@ -78,6 +93,10 @@ BEGIN
     END LOOP;
 END;
 /
+(4consultaOem.png)
+Resultados do OEM: 
+    TIME & WAIT STATISTICS =>Duration == 23.0s, Database Time == 21.9s, PL/SQL & Java == 2.1s, Acitivity % == 100
+    I/O STATISTICS => Buffer Gets == 4,770K, I/O Requests == 5, I/O Bytes == 64KB
 
 
 SELECT acc.constraint_name, ac.constraint_type, acc.column_name
@@ -99,6 +118,9 @@ SET TIMING ON;
 SELECT * 
 FROM sh.sales_summary
 WHERE CUST_ID = 8349 AND AMOUNT_SOLD = 10420.07;
+(noIPResult.png)
+resultado: (CUST_ID == 8349, AMOUNT_SOLD == 10420.07)
+tempo decorrido: 00:00:00.0023
 
 ALTER TABLE sh.sales_summary ADD PRIMARY KEY (CUST_ID, AMOUNT_SOLD);
 
@@ -107,6 +129,9 @@ SET TIMING ON;
 SELECT * 
 FROM sh.sales_summary
 WHERE CUST_ID = 8349 AND AMOUNT_SOLD = 10420.07;
+(withIPResult.png)
+resultado: (CUST_ID == 8349, AMOUNT_SOLD == 10420.07)
+tempo decorrido: 00:00:00.009
 
 EXPLAIN PLAN FOR
 SELECT * 
@@ -115,6 +140,11 @@ WHERE CUST_ID = 8349 AND AMOUNT_SOLD = 10420.07;
 
 SELECT PLAN_TABLE_OUTPUT
 FROM TABLE(DBMS_XPLAN.DISPLAY());
+resultado do explain for
+(explainForDisplay.png) 
+
+logo em seguida mostro o explain plan usando F10
+(explainF10SqlDeveloper.png)
 
 --Tuning task do Oracle
 SELECT * FROM v$sql;
@@ -136,8 +166,10 @@ BEGIN
 END;
 /
 
--- Gerar e visualizar o relatório de tuning
+-- Gerar e visualizar o relatï¿½rio de tuning
 SELECT DBMS_SQLTUNE.REPORT_TUNING_TASK('task_01') FROM dual;
+
+imagem com resultado do tuning(resultTining.png)
 
 
 
